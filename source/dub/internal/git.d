@@ -101,3 +101,35 @@ private string determineVersionWithGitTool(NativePath path)
 
 	return null;
 }
+
+/** Clones a repository into a new directory.
+
+	Params:
+		remote = The (possibly remote) repository to clone from
+		reference = The branch to check out after cloning
+		destination = Repository destination directory
+
+	Returns:
+		Whether the cloning succeeded.
+*/
+bool cloneRepository(string remote, string reference, string destination)
+{
+	import std.process : Pid, spawnProcess, wait;
+
+	Pid command;
+
+	if (!exists(destination)) {
+		command = spawnProcess(["git", "clone", remote, destination]);
+		if (wait(command) != 0) {
+			return false;
+		}
+	}
+
+	command = spawnProcess(["git", "-C", destination, "checkout", reference]);
+	if (wait(command) != 0) {
+		rmdirRecurse(destination);
+		return false;
+	}
+
+	return true;
+}
